@@ -1,0 +1,142 @@
+---
+// Home page in one language (/ = en, /cs/ = cs). Section structure follows the Dirwise home page
+// (Dirwise/site/src/components/Page.astro): hero → app cards → about → key-cap tiles (principles, in
+// place of shortcuts) → contact (in place of the FAQ). The app cards come from src/data/apps.ts.
+import { apps } from "../data/apps";
+import { texts, links, EMAIL, type Lang } from "../i18n/texts";
+import { icon, githubIcon } from "../lib/icons";
+import AppCard from "./AppCard.astro";
+import Layout from "./Layout.astro";
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = texts[lang];
+const a = t.apps;
+
+// Per-app CSS from the data: accent colour and the crop of the card screenshot (no inline style attributes).
+// The values go into a <style> block, so they are validated – a wrong entry stops the build with a clear message.
+const check = (ok: boolean, msg: string) => { if (!ok) throw new Error(`src/data/apps.ts: ${msg}`); };
+for (const app of apps) {
+  check(/^[a-z0-9-]+$/.test(app.slug), `slug "${app.slug}" must match [a-z0-9-]+`);
+  check(/^#[0-9a-f]{6}$/i.test(app.accentColor), `${app.slug}: accentColor must be a hex colour like #0a84ff`);
+  check(/^\d{1,3}% \d{1,3}%$/.test(app.image.focus), `${app.slug}: image.focus must look like "45% 20%"`);
+  check(app.image.zoom >= 1 && app.image.zoom <= 3, `${app.slug}: image.zoom must be between 1 and 3`);
+}
+const appCss = apps
+  .map((app) => `.app-card[data-app="${app.slug}"]{--app-accent:${app.accentColor}}` +
+    `.app-card[data-app="${app.slug}"] .app-shot img{object-position:${app.image.focus};transform-origin:${app.image.focus};transform:scale(${app.image.zoom})}`)
+  .join("");
+
+// Structured data: the studio (Organization) and this website (WebSite). The apps are only linked –
+// their SoftwareApplication data lives on their own sites.
+const site = Astro.site!;
+const orgId = new URL("/#organization", site).href;
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": orgId,
+      name: "Arcly Studio",
+      url: new URL("/", site).href,
+      logo: { "@type": "ImageObject", url: new URL("/icon-512.png", site).href, width: 512, height: 512 },
+      email: EMAIL,
+      description: t.description,
+      sameAs: [links.org],
+    },
+    {
+      "@type": "WebSite",
+      "@id": new URL("/#website", site).href,
+      name: "Arcly Studio",
+      url: new URL("/", site).href,
+      inLanguage: ["en", "cs"],
+      publisher: { "@id": orgId },
+    },
+  ],
+};
+const facts = [
+  { value: 1, label: t.about.facts.developer },
+  { value: apps.length, label: t.about.appsLabel(apps.length) },
+  { value: 0, label: t.about.facts.trackers },
+];
+---
+<Layout lang={lang} title={t.title} description={t.description}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd).replaceAll("<", "\\u003c")} />
+  <style slot="head" is:inline set:html={appCss} />
+  <section class="hero">
+    <div class="hero-sky" aria-hidden="true" style="--stars: url(/media/stars.svg)">
+      <div class="hero-glow"></div>
+    </div>
+    <h1 class="hero-title">
+      {t.heroLines.map(([before, accent, after]) => (
+        <span class="hero-line">{before}{accent && <em>{accent}</em>}{after}</span>
+      ))}
+    </h1>
+    <p class="hero-sub">{t.heroSub}</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#apps">{t.heroApps}<Fragment set:html={icon("ArrowDown", 18)} /></a>
+      <a class="btn btn-ghost" href={links.org}><Fragment set:html={githubIcon(18)} />GitHub</a>
+    </div>
+    <p class="hero-meta">{t.heroMeta}</p>
+  </section>
+
+  <main id="main">
+    <section class="block block-apps" id="apps" aria-labelledby="apps-title">
+      <header class="block-head" data-reveal>
+        <p class="eyebrow">{a.eyebrow}</p>
+        <h2 id="apps-title">{a.title}</h2>
+        <p class="section-lead">{a.lead}</p>
+      </header>
+      <div class="apps-grid" data-count={apps.length}>
+        {apps.map((app) => <AppCard app={app} lang={lang} />)}
+      </div>
+    </section>
+
+    <section class="block" id="about" aria-labelledby="about-title">
+      <header class="block-head" data-reveal>
+        <p class="eyebrow">{t.about.eyebrow}</p>
+        <h2 id="about-title">{t.about.title}</h2>
+      </header>
+      <div class="about-body" data-reveal>
+        {t.about.body.map((p) => <p>{p}</p>)}
+      </div>
+      <ul class="facts">
+        {facts.map((f) => <li data-reveal><strong>{f.value}</strong><span>{f.label}</span></li>)}
+      </ul>
+    </section>
+
+    <section class="block" id="principles" aria-labelledby="principles-title">
+      <header class="block-head" data-reveal>
+        <p class="eyebrow">{t.principles.eyebrow}</p>
+        <h2 id="principles-title">{t.principles.title}</h2>
+      </header>
+      <ul class="keys">
+        {t.principles.items.map((p) => (
+          <li data-reveal>
+            <span class="keycaps"><kbd set:html={icon(p.icon, 20)} /></span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="block" id="contact" aria-labelledby="contact-title">
+      <header class="block-head" data-reveal>
+        <p class="eyebrow">{t.contact.eyebrow}</p>
+        <h2 id="contact-title">{t.contact.title}</h2>
+        <p class="section-lead">{t.contact.lead}</p>
+      </header>
+      <div class="actions">
+        <a class="action" href={`mailto:${EMAIL}`} data-reveal>
+          <span class="action-icon" set:html={icon("Mail", 20)} />
+          <span><strong>{t.contact.email}</strong><span>{EMAIL}</span></span>
+        </a>
+        <a class="action" href={links.org} data-reveal>
+          <span class="action-icon" set:html={githubIcon(20)} />
+          <span><strong>{t.contact.github}</strong><span>{t.contact.githubText}</span></span>
+        </a>
+      </div>
+    </section>
+  </main>
+</Layout>

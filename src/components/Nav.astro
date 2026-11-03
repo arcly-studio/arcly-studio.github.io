@@ -1,0 +1,42 @@
+---
+// Announcement bar and floating navigation pill (as on the Dirwise site). Anchors are plain on the home
+// page, home URL + anchor elsewhere; the language switch keeps the current page.
+import { announcement } from "../data/announcement";
+import { texts, links, home, type Lang } from "../i18n/texts";
+import { icon, githubIcon } from "../lib/icons";
+import arclyIcon from "../assets/brand/arcly-icon.svg?url";
+
+interface Props { lang: Lang; path: string }
+const { lang, path } = Astro.props;
+const t = texts[lang];
+const anchor = (id: string) => (path === "" ? `#${id}` : `${home(lang)}#${id}`);
+---
+{announcement.enabled && (
+  <a class="announce" href={announcement.href[lang]}>
+    <span class="announce-tag">{announcement.tag[lang]}</span>
+    <span>{announcement.text[lang]}</span>
+    <Fragment set:html={icon("ArrowRight", 14)} />
+  </a>
+)}
+
+<header class="nav-wrap">
+  <nav class="nav" aria-label="Arcly Studio">
+    <a class="nav-brand" href={home(lang)}>
+      <img src={arclyIcon} width="22" height="22" alt="" />
+      <span>Arcly Studio</span>
+    </a>
+    <div class="nav-links">
+      <a href={anchor("apps")}>{t.nav.apps}</a>
+      <a href={anchor("about")}>{t.nav.about}</a>
+      <a href={anchor("principles")}>{t.nav.principles}</a>
+      <a href={anchor("contact")}>{t.nav.contact}</a>
+    </div>
+    <div class="nav-end">
+      <a href={links.org} class="nav-icon" aria-label="GitHub" set:html={githubIcon(18)} />
+      <div class="lang" role="group" aria-label={t.langSwitch}>
+        <a href={`${home("en")}${path}`} hreflang="en" lang="en" aria-current={lang === "en" ? "page" : undefined}>EN</a>
+        <a href={`${home("cs")}${path}`} hreflang="cs" lang="cs" aria-current={lang === "cs" ? "page" : undefined}>CS</a>
+      </div>
+    </div>
+  </nav>
+</header>

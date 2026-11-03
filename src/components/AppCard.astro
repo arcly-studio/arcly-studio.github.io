@@ -1,0 +1,45 @@
+---
+// One app card (data from src/data/apps.ts). The whole card is clickable through a "stretched link":
+// the link on the app name covers the card with ::after, the secondary icon links (Store, GitHub,
+// socials) sit above it (z-index) – no link inside a link, each link is its own tab stop.
+// The accent colour comes from the data (data-app → CSS custom property, generated in Home.astro).
+import { Picture } from "astro:assets";
+import { type App, type Lang, appHref, storeUrl } from "../data/apps";
+import { texts } from "../i18n/texts";
+import { icon, githubIcon, brandIcon, brandName } from "../lib/icons";
+
+interface Props { app: App; lang: Lang }
+const { app, lang } = Astro.props;
+const t = texts[lang].apps;
+const href = appHref(app, lang);
+const toSite = Boolean(app.siteUrl);
+// Accessible name of the main link: "Dirwise – website" / "NoirPad – on GitHub".
+const mainLabel = `${app.name} – ${toSite ? t.openSite : t.openRepo}`;
+const secondary = [
+  ...(app.storeId ? [{ href: storeUrl(app.storeId, lang), label: t.store, svg: icon("ShoppingBag", 16) }] : []),
+  ...(toSite ? [{ href: app.githubUrl, label: t.github, svg: githubIcon(16) }] : []),
+  ...app.socials.map((s) => ({ href: s.url, label: brandName(s.network), svg: brandIcon(s.network, 16) })),
+];
+---
+<article class:list={["card", "app-card", app.look && `look-${app.look}`]} data-app={app.slug} data-reveal aria-labelledby={`app-${app.slug}`}>
+  <div class="app-shot">
+    <Picture src={app.image.src} widths={[400, 640, 960]} sizes="(min-width: 1020px) 360px, (min-width: 720px) 50vw, 100vw"
+      formats={["avif", "webp"]} fallbackFormat="jpg" quality={76} alt={app.image.alt[lang]} loading="lazy" decoding="async" />
+  </div>
+  <div class="app-body">
+    <div class="app-head">
+      <Picture src={app.icon} width={40} height={40} densities={[2]} formats={["avif", "webp"]} alt="" />
+      <h3 id={`app-${app.slug}`}>
+        <a class="app-link" href={href} aria-label={mainLabel}>{app.name}</a>
+      </h3>
+      <span class:list={["app-status", `is-${app.status}`]}>{t.status[app.status]}</span>
+    </div>
+    <p class="app-tagline">{app.tagline[lang]}</p>
+    {app.status === "coming-soon" && <p class="app-note">{t.storeSoon}</p>}
+    <ul class="app-links" aria-label={`${app.name} – ${t.links}`}>
+      {secondary.map((s) => (
+        <li><a href={s.href} aria-label={`${s.label} – ${app.name}`} set:html={s.svg} /></li>
+      ))}
+    </ul>
+  </div>
+</article>

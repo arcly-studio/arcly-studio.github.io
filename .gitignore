@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.astro/
+# Local GitHub Pages simulation (Dirwise clone + merged output) and check reports
+.sim/
+.reports/
+public/media/stars.svg
+public/fonts/
+public/favicon.svg
+public/favicon.ico
+public/apple-touch-icon.png
+public/icon-*.png
+
+# Internal working plans – kept locally, not published (the repository will be public)
+PLAN.md
+PLAN-noirpad.md
