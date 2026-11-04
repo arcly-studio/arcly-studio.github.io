@@ -73,7 +73,7 @@ body {
 }
 
 a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) { a:hover { text-decoration: underline; } }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 img, video { max-width: 100%; height: auto; display: block; }
 
@@ -170,10 +170,8 @@ body > *:not(.page-lines):not(.skip):not(.nav-wrap) { position: relative; z-inde
 /* Touch: targets of at least 44 px. */
 @media (pointer: coarse) {
   .nav-icon, .nav-toggle { width: 44px; height: 44px; }
-  .lang a { padding: 10px 12px; }
-  .app-links { gap: 8px; }
-  .app-links a { width: 44px; height: 44px; }
-  .foot nav a { display: inline-block; padding: 10px 0; }
+  .nav-brand { min-height: 44px; }
+  .lang a { padding: 12px; min-width: 44px; line-height: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
   :is(.nav-links a, .nav-icon, .lang a, .nav-toggle, .nav-menu a, .btn, .app-links a, .action, .foot nav a) { transition: color var(--dur-hover) ease, background-color var(--dur-hover) ease, border-color var(--dur-hover) ease; }
@@ -399,7 +397,12 @@ main { max-width: calc(var(--max) + 2 * var(--gutter)); margin: 0 auto; padding:
 .foot-socials a:focus-visible { color: var(--text); }
 @media (hover: hover) and (pointer: fine) { .foot-socials a:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.16); } }
 .foot-socials a:active { scale: 0.97; }
-@media (pointer: coarse) { .foot-socials a { width: 44px; height: 44px; } }
+/* Touch: after the base card and footer rules, which would otherwise override it. */
+@media (pointer: coarse) {
+  .app-links { gap: 8px; }
+  .app-links a, .foot-socials a { width: 44px; height: 44px; }
+  .foot nav a { display: inline-flex; align-items: center; min-height: 44px; padding-block: 0; }
+}
 @media (prefers-reduced-motion: reduce) { .foot-socials a { transition: color var(--dur-hover) ease, background-color var(--dur-hover) ease, border-color var(--dur-hover) ease; } .foot-socials a:active { scale: none; } }
 .foot p { margin: 0; display: inline-flex; align-items: center; gap: 8px; }
 .foot p img { width: 18px; height: 18px; }

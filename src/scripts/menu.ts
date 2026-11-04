@@ -69,6 +69,6 @@ export function setupMenu(root: ParentNode = document) {
     if ((e.target as Element).closest("a")) setOpen(false, { returnFocus: false });
   });
   // Wider than the breakpoint the links are back in the pill – never leave the panel open there.
-  // Focus inside the panel goes back to the button (which stays in the pill) so it never sits on a hidden link.
-  mq.addEventListener("change", () => { if (!mq.matches) setOpen(false); });
+  // The button is hidden there too, so focus is not sent back to it.
+  mq.addEventListener("change", () => { if (!mq.matches) setOpen(false, { returnFocus: false }); });
 }
