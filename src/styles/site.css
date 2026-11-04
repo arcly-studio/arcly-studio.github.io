@@ -19,9 +19,17 @@
   --rose: 244, 63, 94;
   --violet: 139, 92, 246;
   --radius: 14px;
-  --max: 1120px;
+  /* Wide layout: content up to 1600 px, side gutter ~5 % of the window (16 px on phones, 96 px at most). */
+  --max: 1600px;
+  --gutter: clamp(16px, 5vw, 96px);
+  /* Family design language (D1) – motion and rhythm only; the colours above stay the studio's own. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-press: 0.14s;
+  --dur-hover: 0.15s;
+  --section-gap: 72px;
   color-scheme: dark;
 }
+@media (max-width: 640px) { :root { --section-gap: 48px; } }
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -51,12 +59,6 @@ html.lenis.lenis-smooth { scroll-behavior: auto !important; }
   background-repeat: no-repeat;
   -webkit-background-clip: text; background-clip: text;
 }
-/* Scroll progress (scaleX from motion.ts) */
-.scroll-progress {
-  position: fixed; left: 0; top: 0; z-index: 30; width: 100%; height: 2px; pointer-events: none;
-  background: linear-gradient(90deg, #f43f5e, #8b5cf6); transform: scaleX(0); transform-origin: 0 50%; display: none;
-}
-html[data-motion="on"] .scroll-progress { display: block; }
 
 body {
   margin: 0;
@@ -72,7 +74,7 @@ body {
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 img, video { max-width: 100%; height: auto; display: block; }
 
 .sr-only {
@@ -84,30 +86,30 @@ img, video { max-width: 100%; height: auto; display: block; }
 
 /* Vertical lines along the content (whole page) */
 .page-lines {
-  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  /* 16 px outside the content edge – the content now sits a gutter (~5 % of the window) from each side. */
+  position: absolute; inset: 0 max(0px, calc(var(--gutter) - 16px)); pointer-events: none; z-index: 0;
   max-width: calc(var(--max) + 32px); margin: 0 auto;
   border-left: 1px solid rgba(255, 255, 255, 0.06); border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 body { position: relative; overflow-x: clip; }
-body > *:not(.page-lines):not(.skip):not(.scroll-progress):not(.nav-wrap) { position: relative; z-index: 1; }
+body > *:not(.page-lines):not(.skip):not(.nav-wrap) { position: relative; z-index: 1; }
 
 /* Announcement bar */
 .announce {
   display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
-  padding: 9px 16px; font-size: 13.5px; color: var(--text);
+  padding: 9px 16px; font-size: 14px; color: var(--text);
   background: linear-gradient(90deg, transparent, rgba(var(--rose), 0.14), rgba(var(--violet), 0.14), transparent);
-  border-bottom: 1px solid rgba(var(--rose), 0.2);
 }
 .announce:hover { text-decoration: none; background: linear-gradient(90deg, transparent, rgba(var(--rose), 0.22), rgba(var(--violet), 0.22), transparent); }
-.announce svg { transition: translate 0.15s ease; }
+.announce svg { transition: translate var(--dur-hover) var(--ease-out); }
 .announce:hover svg { translate: 3px 0; }
-.announce-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #fff; background: var(--accent-fill); padding: 2px 8px; border-radius: 999px; }
+.announce-tag { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #fff; background: var(--accent-fill); padding: 2px 8px; border-radius: 999px; }
 @media (prefers-reduced-motion: reduce) { .announce svg { transition: none; } }
 
 /* Floating navigation – pill */
 .nav-wrap { position: sticky; top: 0; z-index: 20; padding: 12px 16px 0; }
 .nav {
-  max-width: 820px; margin: 0 auto; display: flex; align-items: center; gap: 12px;
+  max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 12px;
   padding: 6px 6px 6px 16px; border-radius: 999px;
   background: rgba(17, 22, 34, 0.72); border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -118,30 +120,76 @@ body > *:not(.page-lines):not(.skip):not(.scroll-progress):not(.nav-wrap) { posi
 .nav-brand img { width: 22px; height: 22px; }
 .nav-links { display: flex; gap: 4px; margin: 0 auto; }
 .nav-links a { color: var(--muted); font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 999px; }
-.nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); text-decoration: none; }
+.nav-links a:hover { text-decoration: none; }
 .nav-end { display: flex; align-items: center; gap: 6px; }
 .nav-icon { color: var(--muted); display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; }
-.nav-icon:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
 .lang { display: flex; padding: 3px; background: rgba(255, 255, 255, 0.06); border-radius: 999px; }
-.lang a { color: var(--muted); font-size: 12.5px; font-weight: 600; padding: 7px 11px; border-radius: 999px; min-width: 40px; text-align: center; }
-.lang a:hover { text-decoration: none; color: var(--text); }
-.lang a[aria-current="page"] { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+.lang a { color: var(--muted); font-size: 12px; font-weight: 600; padding: 7px 11px; border-radius: 999px; min-width: 40px; text-align: center; }
+.lang a:hover { text-decoration: none; }
+.lang a[aria-current] { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+/* States (family design language): colour on hover only with a real pointer, a press you can feel. */
+:is(.nav-links a, .nav-icon, .lang a, .nav-toggle, .nav-menu a, .btn, .app-links a, .action, .foot nav a) {
+  transition: color var(--dur-hover) ease, background-color var(--dur-hover) ease, border-color var(--dur-hover) ease, scale var(--dur-press) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(.nav-links a, .nav-icon, .nav-menu a):hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+  .lang a:hover { color: var(--text); }
+}
+/* Press: the `scale` property, not `transform` – GSAP owns transform on revealed elements (.action). */
+:is(.btn, .app-links a, .action, .nav-icon, .nav-toggle):active { scale: 0.97; }
+:is(.nav-links a, .lang a, .nav-menu a):active { scale: 0.98; }
+/* Mobile menu (src/scripts/menu.ts): button in the pill, panel under it. */
+.nav { position: relative; }
+.nav-toggle {
+  display: none; place-items: center; width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%;
+  color: var(--text); background: rgba(255, 255, 255, 0.06); cursor: pointer;
+}
+.nav-toggle .i-close, .nav-wrap[data-menu="open"] .nav-toggle .i-open { display: none; }
+.nav-wrap[data-menu="open"] .nav-toggle .i-close { display: block; }
+.nav-menu {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; padding: 8px; border-radius: 20px;
+  /* Opaque: a backdrop-filter inside the pill's own backdrop-filter does not blur, text behind would show through. */
+  background: rgb(17, 22, 34); border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0; transform: translateY(-4px); transition: opacity 0.12s var(--ease-out), transform 0.12s var(--ease-out);
+}
+.nav-wrap[data-menu="open"] .nav-menu { opacity: 1; transform: none; transition-duration: 0.18s; }
+.nav-menu[hidden] { display: none; }
+.nav-menu ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.nav-menu a { display: flex; align-items: center; min-height: 48px; padding: 0 16px; border-radius: 12px; color: var(--text); font-size: 16px; font-weight: 500; }
+.nav-menu a:hover { text-decoration: none; }
 @media (max-width: 760px) {
   .nav-links { display: none; }
   .nav-end { margin-left: auto; }
+  .nav-toggle:not([hidden]) { display: grid; }
+}
+@media (min-width: 761px) { .nav-menu { display: none !important; } }
+.nav-menu a svg { margin-right: 10px; color: var(--muted); }
+/* Very narrow phones (320 px): the pill would overflow – GitHub is in the menu, so its pill icon goes. */
+@media (max-width: 374px) { .nav-end .nav-icon { display: none; } }
+/* Touch: targets of at least 44 px. */
+@media (pointer: coarse) {
+  .nav-icon, .nav-toggle { width: 44px; height: 44px; }
+  .lang a { padding: 10px 12px; }
+  .app-links { gap: 8px; }
+  .app-links a { width: 44px; height: 44px; }
+  .foot nav a { display: inline-block; padding: 10px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.nav-links a, .nav-icon, .lang a, .nav-toggle, .nav-menu a, .btn, .app-links a, .action, .foot nav a) { transition: color var(--dur-hover) ease, background-color var(--dur-hover) ease, border-color var(--dur-hover) ease; }
+  :is(.btn, .app-links a, .action, .nav-icon, .nav-toggle, .nav-links a, .lang a, .nav-menu a):active { scale: none; }
+  .nav-menu { transition: none; transform: none; }
 }
 
-main { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
+main { max-width: calc(var(--max) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
 /* Up to --max the hero and <main> are exactly as wide as the window: clip decorations that reach past them (the
    hero sky is 16 px wider) here, not only on <body> – a phone otherwise widens its layout and zooms out.
    The visible result is the same as before (body clipped at the same edges); wider screens are untouched. */
-@media (max-width: 1120px) { .hero, main { overflow-x: clip; } }
-section { padding: 56px 0; }
-h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02em; font-weight: 700; margin: 0 0 12px; text-align: center; }
-.section-lead { color: var(--muted); text-align: center; margin: 0 auto 28px; max-width: 560px; }
+@media (max-width: 1790px) { .hero, main { overflow-x: clip; } }
+.section-lead { color: var(--muted); text-align: center; margin: 0 auto; max-width: 560px; font-size: 18px; }
 
 /* Hero */
-.hero { position: relative; text-align: center; padding: 88px 16px 40px; max-width: var(--max); margin: 0 auto; }
+.hero { position: relative; text-align: center; padding: 88px var(--gutter) 40px; max-width: calc(var(--max) + 2 * var(--gutter)); margin: 0 auto; }
 /* Stars (media/stars.svg from prepare.mjs), fine grid and rose/violet glow – no JS */
 .hero-sky {
   position: absolute; inset: -150px -16px -320px; z-index: -1; pointer-events: none; overflow: hidden;
@@ -172,38 +220,43 @@ h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02
   font-style: normal; color: transparent;
   filter: drop-shadow(0 0 28px rgba(var(--rose), 0.4));
 }
-.hero-sub { color: var(--muted); font-size: clamp(16px, 2vw, 19px); max-width: 620px; margin: 0 auto 32px; text-wrap: pretty; }
+.hero-sub { color: var(--muted); font-size: clamp(16px, 2vw, 18px); max-width: 720px; margin: 0 auto 32px; text-wrap: pretty; }
 .hero-cta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 52px; padding: 0 22px; border-radius: 12px; font-weight: 600; font-size: 16px; }
+.btn { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 52px; padding: 0 22px; border-radius: 12px; font-weight: 600; font-size: 16px; }
 .btn:hover { text-decoration: none; }
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-fill), var(--accent-fill-2)); color: #fff;
   box-shadow: 0 8px 30px rgba(var(--rose), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
-.btn-primary:hover { background: linear-gradient(135deg, #be123c, #6d28d9); }
+.btn-primary::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(135deg, #be123c, #6d28d9); opacity: 0; transition: opacity var(--dur-hover) ease;
+}
 .btn-ghost { color: var(--text); background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.14); }
-.btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover::after { opacity: 1; }
+  .btn-ghost:hover { background: rgba(255, 255, 255, 0.1); }
+}
 .btn svg { flex-shrink: 0; }
-.hero-meta { color: var(--muted); font-size: 13.5px; margin: 16px 0 26px; }
-.pill { font-size: 11.5px; font-weight: 600; color: var(--accent-soft); background: var(--accent-bg); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.hero-meta { color: var(--muted); font-size: 14px; margin: 16px 0 26px; }
 @media (max-width: 560px) {
   .hero { padding-top: 56px; }
+  /* The title carries the first screen on a phone too: ~11.5vw instead of the 34 px floor. */
+  .hero-title { font-size: clamp(38px, 11.5vw, 50px); }
   .hero-cta .btn { width: 100%; max-width: 320px; }
 }
 
 /* Sections below the hero */
-.block { padding: 88px 0; }
-.block-head { text-align: center; margin: 0 auto 40px; max-width: 680px; }
+.block { padding: var(--section-gap) 0; }
+.block-head { text-align: center; margin: 0 auto 40px; max-width: 900px; }
 .eyebrow {
   display: inline-block; margin: 0 0 14px; padding: 4px 12px; border-radius: 999px;
   font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--accent-soft); background: var(--accent-bg); border: 1px solid rgba(var(--rose), 0.25);
 }
 .block-head h2 { font-size: clamp(30px, 5vw, 52px); font-weight: 850; letter-spacing: -0.035em; line-height: 1.05; margin: 0 0 14px; text-wrap: balance; }
-.block-head .section-lead { margin: 0 auto; font-size: 17px; }
-@media (max-width: 640px) { .block { padding: 56px 0; } }
 /* Apps right after the hero: the hero already ends with 40 px – together like the gap between other sections. */
-.block-apps { padding-top: 48px; }
+.block-apps { padding-top: calc(var(--section-gap) - 40px); }
 @media (max-width: 640px) { .block-apps { padding-top: 16px; } }
 
 /* App cards (src/data/apps.ts, AppCard.astro). Studio frame (card from the Dirwise site), accent per app
@@ -214,7 +267,7 @@ h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02
 @media (min-width: 720px) { .apps-grid > .app-card { flex-basis: calc((100% - 16px) / 2); } }
 @media (min-width: 1020px) { .apps-grid > .app-card { flex-basis: calc((100% - 32px) / 3); } }
 /* One or two apps: two wider columns, centred (no empty third slot). */
-@media (min-width: 1020px) { .apps-grid:is([data-count="1"], [data-count="2"]) { max-width: 900px; margin: 0 auto; } }
+@media (min-width: 1020px) { .apps-grid:is([data-count="1"], [data-count="2"]) { max-width: 1400px; margin: 0 auto; } }
 @media (min-width: 1020px) { .apps-grid:is([data-count="1"], [data-count="2"]) > .app-card { flex-basis: calc((100% - 16px) / 2); } }
 
 .card {
@@ -227,21 +280,26 @@ h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02
   background: linear-gradient(90deg, transparent, var(--app-accent, rgb(var(--rose))), transparent); opacity: 0.7;
 }
 /* Hover: subtle lift (translate – the reveal animation owns transform) and a glow in the app's accent. */
-.app-card { --app-accent: rgb(var(--rose)); transition: border-color 0.2s ease, box-shadow 0.25s ease, translate 0.25s ease; }
-.app-card:hover, .app-card:focus-within {
+.app-card { --app-accent: rgb(var(--rose)); transition: border-color 0.2s ease, box-shadow 0.25s var(--ease-out), translate 0.25s var(--ease-out); }
+.app-card:focus-within {
   border-color: color-mix(in srgb, var(--app-accent) 45%, transparent);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 40px color-mix(in srgb, var(--app-accent) 18%, transparent);
 }
-@media (hover: hover) { .app-card:hover { translate: 0 -4px; } }
+@media (hover: hover) and (pointer: fine) {
+  .app-card:hover {
+    translate: 0 -4px; border-color: color-mix(in srgb, var(--app-accent) 45%, transparent);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 0 40px color-mix(in srgb, var(--app-accent) 18%, transparent);
+  }
+}
 @media (prefers-reduced-motion: reduce) { .app-card { transition: none; } .app-card:hover { translate: none !important; } }
 
-.app-shot { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.app-shot { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
 .app-shot picture, .app-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .app-shot::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, transparent 55%, rgba(10, 13, 22, 0.55)); }
 .app-body { display: flex; flex-direction: column; gap: 10px; padding: 18px 20px 18px; flex: 1; }
 .app-head { display: flex; align-items: center; gap: 12px; }
 .app-head img { width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0; }
-.app-card h3 { margin: 0; font-size: 21px; letter-spacing: -0.01em; line-height: 1.2; }
+.app-card h3 { margin: 0; font-size: 20px; letter-spacing: -0.01em; line-height: 1.2; }
 /* Stretched link: the name's link covers the whole card; secondary links sit above it. */
 .app-link { color: var(--text); text-decoration: none; }
 .app-link::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
@@ -253,14 +311,15 @@ h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02
   color: var(--text); border: 1px solid color-mix(in srgb, var(--app-accent) 55%, transparent);
   background: color-mix(in srgb, var(--app-accent) 14%, transparent);
 }
-.app-tagline { margin: 0; color: var(--muted); font-size: 15px; }
-.app-note { margin: 0; font-size: 13px; color: var(--text); }
+.app-tagline { margin: 0; color: var(--muted); font-size: 16px; }
+.app-note { margin: 0; font-size: 14px; color: var(--text); }
 .app-links { list-style: none; margin: auto 0 0; padding: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; position: relative; z-index: 2; }
 .app-links a {
   display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: var(--muted);
   background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.app-links a:hover { color: var(--text); background: color-mix(in srgb, var(--app-accent) 16%, transparent); border-color: color-mix(in srgb, var(--app-accent) 45%, transparent); }
+.app-links a:focus-visible { color: var(--text); background: color-mix(in srgb, var(--app-accent) 16%, transparent); border-color: color-mix(in srgb, var(--app-accent) 45%, transparent); }
+@media (hover: hover) and (pointer: fine) { .app-links a:hover { color: var(--text); background: color-mix(in srgb, var(--app-accent) 16%, transparent); border-color: color-mix(in srgb, var(--app-accent) 45%, transparent); } }
 .app-links a:focus-visible { outline-color: var(--app-accent); }
 
 /* Terminal look (NoirPad): the app's green on its near-black surface, name in JetBrains Mono. */
@@ -269,15 +328,29 @@ h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02
 .look-terminal .app-link { color: var(--app-accent); }
 .look-terminal h3::before { content: "> "; content: "> " / ""; color: color-mix(in srgb, var(--app-accent) 60%, transparent); }
 .look-terminal .app-tagline { color: #b4bfb6; }
-.look-terminal .app-note, .look-terminal .app-status { font-family: "JetBrains Mono NP", ui-monospace, Consolas, monospace; }
+.look-terminal .app-note { font-family: "JetBrains Mono NP", ui-monospace, Consolas, monospace; }
 .look-terminal .app-note { color: #9fdcae; }
 .look-terminal .app-links a { color: #9fdcae; background: rgba(0, 255, 65, 0.04); border-color: rgba(0, 255, 65, 0.2); }
 
-/* About: text + facts */
-.about-body { max-width: 720px; margin: 0 auto; text-align: center; }
-.about-body p { color: rgba(220, 228, 245, 0.86); font-size: 17px; line-height: 1.7; margin: 0 0 16px; text-wrap: pretty; }
-.facts { list-style: none; margin: 36px auto 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 720px; }
+/* About: text + facts – side by side from 1020 px (text left-aligned, readable measure), stacked below. */
+.about-grid { max-width: 720px; margin: 0 auto; }
+.about-body { text-align: center; }
+.about-body p { color: rgba(220, 228, 245, 0.86); font-size: 18px; line-height: 1.7; margin: 0 0 16px; text-wrap: pretty; }
+.facts { list-style: none; margin: 32px auto 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .facts li { padding: 20px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); text-align: center; }
+@media (min-width: 1020px) {
+  .about-grid { max-width: 1400px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 520px); gap: clamp(48px, 6vw, 120px); align-items: center; }
+  .about-body { text-align: left; max-width: 60ch; }
+  .about-body p:last-child { margin-bottom: 0; }
+  .facts { margin: 0; grid-template-columns: 1fr; }
+  .facts li { display: flex; align-items: baseline; gap: 16px; padding: 16px 20px; text-align: left; }
+}
+/* Phones: one fact per row, number left and label right – long labels ("sledovacích nástrojů") stay on one line. */
+@media (max-width: 640px) {
+  .facts { grid-template-columns: 1fr; gap: 8px; }
+  .facts li { display: flex; align-items: baseline; gap: 16px; padding: 14px 18px; text-align: left; }
+  .facts strong { min-width: 1.2ch; }
+}
 .facts strong {
   display: block; font-size: clamp(36px, 6vw, 52px); font-weight: 900; letter-spacing: -0.04em; line-height: 1;
   background: linear-gradient(120deg, #fb7185, #8b5cf6); -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -285,44 +358,59 @@ h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -0.02
 .facts span { color: var(--muted); font-size: 14px; }
 
 /* Principles – tiles with key caps (keyCaps animation from the Dirwise shortcuts section) */
-.keys { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); max-width: 1040px; }
+.keys { list-style: none; margin: 0 auto; padding: 0; display: grid; gap: 12px; grid-template-columns: 1fr; max-width: 1400px; }
+@media (min-width: 720px) { .keys { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .keys li {
   display: flex; flex-direction: column; gap: 12px; padding: 18px 18px 16px; border-radius: 14px;
   background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
 }
-.keys h3 { margin: 0; font-size: 17px; }
-.keys p { margin: 0; color: var(--muted); font-size: 15px; }
+.keys h3 { margin: 0; font-size: 18px; }
+.keys p { margin: 0; color: var(--muted); font-size: 16px; }
 .keycaps { display: flex; }
-kbd {
+.keycap {
   display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 12px;
   color: var(--accent-soft);
   background: linear-gradient(180deg, #232a3c, #161b29); border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
-@media (max-width: 560px) { .keys { grid-template-columns: 1fr; } }
 
 /* Contact – action tiles (as .doc-action on the Dirwise support page) */
-.actions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 760px; margin: 0 auto; }
+.actions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 1400px; margin: 0 auto; }
 .action { display: flex; gap: 14px; align-items: flex-start; padding: 18px; border-radius: var(--radius); background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text); }
-.action:hover { text-decoration: none; border-color: rgba(var(--rose), 0.35); background: rgba(var(--rose), 0.05); }
+.action:hover { text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .action:hover { border-color: rgba(var(--rose), 0.35); background: rgba(var(--rose), 0.05); } }
 .action-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 10px; color: var(--accent-soft); background: var(--accent-bg); border: 1px solid rgba(var(--rose), 0.25); flex-shrink: 0; }
-.action strong { display: block; font-size: 16.5px; margin-bottom: 2px; }
-.action span:last-child { color: var(--muted); font-size: 14.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.action strong { display: block; font-size: 16px; margin-bottom: 2px; }
+.action span:last-child { color: var(--muted); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
 
 /* Footer */
-.foot { border-top: 1px solid var(--border); margin-top: 40px; padding: 28px 16px 40px; text-align: center; color: var(--muted); font-size: 14px; }
+.foot { border-top: 1px solid var(--border); margin-top: var(--section-gap); padding: 28px 16px 40px; text-align: center; color: var(--muted); font-size: 14px; }
 .foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; margin-bottom: 12px; }
 .foot nav a { color: var(--text); padding: 6px 0; }
+/* Social accounts of the apps, one group per app: "Dirwise [icons]   NoirPad [icons]" */
+.foot-socials { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; }
+.foot-socials li { display: flex; align-items: center; gap: 6px; }
+.foot-socials-app { margin-right: 4px; color: var(--muted); }
+.foot-socials a {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; color: var(--muted);
+  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: color var(--dur-hover) ease, background-color var(--dur-hover) ease, border-color var(--dur-hover) ease, scale var(--dur-press) var(--ease-out);
+}
+.foot-socials a:focus-visible { color: var(--text); }
+@media (hover: hover) and (pointer: fine) { .foot-socials a:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.16); } }
+.foot-socials a:active { scale: 0.97; }
+@media (pointer: coarse) { .foot-socials a { width: 44px; height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .foot-socials a { transition: color var(--dur-hover) ease, background-color var(--dur-hover) ease, border-color var(--dur-hover) ease; } .foot-socials a:active { scale: none; } }
 .foot p { margin: 0; display: inline-flex; align-items: center; gap: 8px; }
 .foot p img { width: 18px; height: 18px; }
 
 /* 404 */
 .nf { min-height: 70vh; }
 .nf .hero-title { font-size: clamp(72px, 16vw, 180px); }
-.nf-cols { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 760px; margin: 0 auto; text-align: center; }
-.nf-cols h2 { font-size: 22px; margin: 0 0 8px; }
+.nf-cols { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 1100px; margin: 0 auto; text-align: center; }
+.nf-cols h2 { font-size: 20px; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 8px; }
 .nf-cols p { color: var(--muted); margin: 0 0 16px; }
-.nf-cols .hero-cta .btn { height: 46px; font-size: 15px; }
+.nf-cols .hero-cta .btn { height: 46px; font-size: 16px; }
 .nf-nav .nav-end { margin-left: auto; }
 /* Room for the last glyph: with the negative letter spacing the gradient box would clip the "4" and show its edge. */
 .nf .hero-title em { padding: 0 0.06em; }

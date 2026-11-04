@@ -1,7 +1,8 @@
 // All apps of the studio – the single source for the app cards on the home page, the footer links and
 // the app count in "About". Order on the page = order in this array. How to add an app: README.md.
 import type { ImageMetadata } from "astro";
-import projects from "../../project-sites.json";
+import { isLive } from "./live";
+import { socials, type SocialAccount } from "./socials";
 import dirwiseIcon from "../assets/apps/dirwise-icon.png";
 import dirwiseShot from "../assets/apps/dirwise-columns.png";
 import noirpadIcon from "../assets/apps/noirpad-icon.png";
@@ -9,10 +10,7 @@ import noirpadShot from "../assets/apps/noirpad-hero.png";
 
 export type Lang = "en" | "cs";
 export type Localized = Record<Lang, string>;
-export type SocialNetwork = "tiktok" | "instagram" | "youtube";
-
-/** A project site from project-sites.json that is deployed ("live": true). */
-const isLive = (name: string) => projects.sites.some((s) => s.name === name && s.live === true);
+export type { SocialNetwork } from "./socials";
 
 export interface App {
   /** Id matching [a-z0-9-]+; also the project-site path if the app has its own site (/dirwise/). */
@@ -26,7 +24,8 @@ export interface App {
   /** Microsoft Store product id (adds a Store icon link). */
   storeId?: string;
   githubUrl: string;
-  socials: { network: SocialNetwork; url: string }[];
+  /** Accounts on social networks – from src/data/socials.ts. */
+  socials: SocialAccount[];
   /** Card accent as a 6-digit hex colour (border glow, badge, hover, focus ring). */
   accentColor: string;
   /** Optional look of the card: "terminal" = monospace name and a darker green-tinted surface. */
@@ -48,11 +47,7 @@ export const apps: App[] = [
     siteUrl: { en: "/dirwise/", cs: "/dirwise/cs/" },
     storeId: "9MZ67726S65X",
     githubUrl: "https://github.com/arcly-studio/dirwise",
-    socials: [
-      { network: "tiktok", url: "https://www.tiktok.com/@dirwise" },
-      { network: "instagram", url: "https://www.instagram.com/dirwise.app/" },
-      // YouTube: TODO – channel handle not known yet
-    ],
+    socials: socials.dirwise,
     accentColor: "#0a84ff",
     icon: dirwiseIcon,
     image: {
@@ -73,14 +68,11 @@ export const apps: App[] = [
       cs: "Poznámky v Markdownu, které můžete zamknout heslem, v terminálovém vzhledu – bez účtu a cloudu, zůstávají v počítači.",
     },
     status: "coming-soon",
-    // The card links to /noirpad/ only once the site is deployed – the one switch is "live" in project-sites.json.
+    // The card links to /noirpad/ only once the site is deployed – the one switch is "live" in project-sites.json
+    // (in the local simulation sim.mjs sets ARCLY_SIM_LIVE=noirpad, see src/data/live.ts).
     ...(isLive("noirpad") ? { siteUrl: { en: "/noirpad/", cs: "/noirpad/cs/" } } : {}),
     githubUrl: "https://github.com/arcly-studio/noirpad",
-    socials: [
-      { network: "tiktok", url: "https://www.tiktok.com/@noirpad" },
-      { network: "instagram", url: "https://www.instagram.com/noirpad.app/" },
-      { network: "youtube", url: "https://www.youtube.com/@Noirpad" },
-    ],
+    socials: socials.noirpad,
     accentColor: "#00ff41",
     look: "terminal",
     icon: noirpadIcon,

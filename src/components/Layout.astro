@@ -4,6 +4,7 @@
 // `path` = page path without the language prefix ("" = home).
 import { apps, appHref } from "../data/apps";
 import { texts, links, EMAIL, home, type Lang } from "../i18n/texts";
+import { brandIcon, brandName } from "../lib/icons";
 import arclyIcon from "../assets/brand/arcly-icon.svg?url";
 import Fonts from "./Fonts.astro";
 import Nav from "./Nav.astro";
@@ -18,6 +19,8 @@ const abs = (l: Lang) => new URL(pageHref(l), Astro.site).href;
 const urls = { en: abs("en"), cs: abs("cs") };
 const other: Lang = lang === "en" ? "cs" : "en";
 const ogImage = new URL(`/og-${lang}.png`, Astro.site).href;
+// Copyright year from the build (the site is rebuilt on every change) – never stale.
+const year = new Date().getFullYear();
 ---
 <!doctype html>
 <html lang={t.htmlLang}>
@@ -77,7 +80,6 @@ const ogImage = new URL(`/og-${lang}.png`, Astro.site).href;
     <slot name="head" />
   </head>
   <body>
-    <div class="scroll-progress" aria-hidden="true"></div>
     <a class="skip" href="#main">{t.skip}</a>
     <div class="page-lines" aria-hidden="true"></div>
     <Nav lang={lang} path={path} />
@@ -89,7 +91,18 @@ const ogImage = new URL(`/og-${lang}.png`, Astro.site).href;
         <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
         {apps.map((app) => <a href={appHref(app, lang)}>{app.name}</a>)}
       </nav>
-      <p><img src={arclyIcon} width="18" height="18" alt="" />© 2026 Arcly Studio</p>
+      {/* Social accounts of the apps (src/data/socials.ts), grouped by app; the studio has none of its own yet. */}
+      <ul class="foot-socials" aria-label={t.footerSocials}>
+        {apps.filter((app) => app.socials.length).map((app) => (
+          <li>
+            <span class="foot-socials-app">{app.name}</span>
+            {app.socials.map((s) => (
+              <a href={s.url} rel="noopener" aria-label={`${app.name} – ${brandName(s.network)} ${s.handle}`} title={`${brandName(s.network)} ${s.handle}`} set:html={brandIcon(s.network, 16)} />
+            ))}
+          </li>
+        ))}
+      </ul>
+      <p><img src={arclyIcon} width="18" height="18" alt="" />© {year} Arcly Studio</p>
     </footer>
 
     <script>

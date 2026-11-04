@@ -3,8 +3,10 @@
 // only from JS (desktop right away, mobile after interaction / 3 s after `load`), so without JS, on error
 // or with reduced motion everything is visible. Initial hidden states live in CSS only under
 // `html[data-motion="pending"]` (site.css); here they become GSAP inline styles and the attribute turns "on".
-// Rules: only transform and opacity, every element is revealed once (except scrub effects),
-// 0.6–0.9 s ease-out.
+// Rules (design language of the Arcly family, D1): only transform and opacity (plus the accent word's sweep
+// and glow), every element is revealed once (except scrub effects); entrances 0.6 s with a strong ease-out
+// (power4.out = cubic-bezier(.23,1,.32,1)), offset 24 px (cards 32 px), scale from 0.97, stagger 0.06 s;
+// scroll-linked effects follow Lenis directly (scrub: true – one smoothing, not two). The navigation stays put.
 // Studio differences: no live demo and no video section – the app cards follow the hero; the key caps
 // are on the principle tiles. The hero content (title, text, buttons) is never hidden – it is visible on the first paint, before any JS (LCP); the intro only adds
 // effects on top: the light sweep over the accent word, its glow pulse and the background glow.
@@ -21,7 +23,8 @@ import Lenis from "lenis";
 gsap.registerPlugin(ScrollTrigger);
 
 const html = document.documentElement;
-const EASE = "power3.out";
+/** Strong ease-out of the family design language: power4.out ≈ cubic-bezier(.23,1,.32,1). */
+const EASE = "power4.out";
 /** From 768 px full motion (hero intro, parallax, Lenis); below only gentle section reveals. */
 const DESKTOP = "(min-width: 768px)";
 
@@ -33,8 +36,6 @@ const REVEAL = "[data-reveal], .foot";
 
 let mm: gsap.MatchMedia | null = null;
 let introDone = false;
-/** Until this time (performance.now) the navigation is not hidden – smooth anchor jumps, hash on load. */
-let navHoldUntil = 0;
 let lenis: Lenis | null = null;
 
 /** Revert everything (GSAP inline styles, Lenis) and show the content without motion – on any error. */
@@ -52,7 +53,6 @@ export function init() {
   // The safety net in Layout.astro already removed the attribute (slow network) or reduced motion applies.
   if (html.dataset.motion !== "pending" || html.dataset.motionInit) return;
   html.dataset.motionInit = "1";
-  if (location.hash) navHoldUntil = performance.now() + 1500;
 
   try {
     mm = gsap.matchMedia();
@@ -80,7 +80,7 @@ export function init() {
           for (const el of pending) if (!unseen(el)) el.dataset.revealed = "1";
           const revealTargets = pending.filter((el) => !el.dataset.revealed);
           // The footer only fades: moving it down would lengthen a short page and cause CLS.
-          if (revealTargets.length) gsap.set(revealTargets, { opacity: 0, y: (_: number, el: Element) => revealY(el), scale: (_: number, el: Element) => (isCard(el) ? 0.94 : 1) });
+          if (revealTargets.length) gsap.set(revealTargets, { opacity: 0, y: (_: number, el: Element) => revealY(el), scale: (_: number, el: Element) => (isCard(el) ? 0.97 : 1) });
           // Intro only on the first view at the top – not after switching from mobile, after scrolling or with a hash.
           if (desktop && !introDone && scrollY < 50 && !targetOf(location.hash)) accent = $(".hero-title em");
           introDone = true;
@@ -89,13 +89,11 @@ export function init() {
           if (desktop) {
             if (fine) lenis = setupLenis();
             if (accent) heroIntro(accent);
-            heroBackdrop(!!accent);
+            heroBackdrop(!!accent, !!lenis);
             cardsParallax();
           }
           reveals(revealTargets, signal);
           keyCaps(unseen);
-          progressBar();
-          hideOnScroll(signal);
           anchors(signal);
           ro = refreshOnResize();
         } catch (err) {
@@ -163,8 +161,7 @@ function anchors(signal: AbortSignal) {
       if (url.hash !== location.hash) history.pushState(null, "", url.hash);
       if (!el.hasAttribute("tabindex")) el.tabIndex = -1;
       el.focus({ preventScroll: true });
-      navHoldUntil = performance.now() + 1200;
-      lenis.scrollTo(el, { duration: 1 });
+      lenis.scrollTo(el, { duration: 0.8 });
     },
     { signal },
   );
@@ -181,25 +178,25 @@ function heroIntro(accent: HTMLElement) {
 }
 
 /** Glow and stars behind the hero: light up on load, move slower than the content and dim on scroll. */
-function heroBackdrop(intro: boolean) {
+function heroBackdrop(intro: boolean, smooth: boolean) {
   const sky = $(".hero-sky");
   const glow = $(".hero-glow");
   if (!sky || !glow) return;
   if (intro) gsap.fromTo(glow, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.9, ease: EASE, clearProps: "opacity,transform" });
   else gsap.set(glow, { clearProps: "opacity,transform" });
-  gsap.to(sky, { y: 160, scale: 1.12, opacity: 0.45, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 0.5 } });
+  // With Lenis the scroll is already smoothed – follow it directly; without (touch, coarse pointer) a light lag.
+  gsap.to(sky, { y: 160, scale: 1.12, opacity: 0.45, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: smooth ? true : 0.3 } });
 }
 
 /* ---------- Sections ---------- */
 
 const isCard = (el: Element) => el.classList.contains("card");
-/** Initial offset: cards 60 px, others 40 px, footer 0 (see above). */
-const revealY = (el: Element) => (isCard(el) ? 60 : el.classList.contains("foot") ? 0 : 40);
+/** Initial offset: cards 32 px, others 24 px, footer 0 (see above). */
+const revealY = (el: Element) => (isCard(el) ? 32 : el.classList.contains("foot") ? 0 : 24);
 
-const show = (els: HTMLElement[], stagger = 0.08) => {
+const show = (els: HTMLElement[], stagger = 0.06) => {
   for (const el of els) el.dataset.revealed = "1";
-  const cards = els.some(isCard);
-  gsap.to(els, { opacity: 1, y: 0, scale: 1, duration: cards ? 0.8 : 0.7, ease: EASE, stagger: cards ? 0.1 : stagger, overwrite: "auto", clearProps: "opacity,transform" });
+  gsap.to(els, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: EASE, stagger, overwrite: "auto", clearProps: "opacity,transform" });
 };
 
 /** Reveal on scroll – once, in batches with a stagger. An element that receives keyboard focus before
@@ -227,21 +224,22 @@ function reveals(targets: HTMLElement[], signal: AbortSignal) {
   );
 }
 
-/** Key caps on the principle tiles "pop" like a pressed key – once, together with the tile. */
+/** Key caps on the principle tiles settle like a pressed key – once, together with the tile; a small overshoot
+ *  from 0.8, never from far smaller (design language: nothing appears from nothing). */
 function keyCaps(unseen: (el: Element) => boolean) {
   // Tiles already revealed (seen on mobile before a switch to desktop) keep their caps as they are.
   const tiles = $$(".keys li").filter((li) => !li.dataset.keysDone && !li.dataset.revealed && unseen(li));
   for (const li of tiles) {
-    const caps = $$("kbd", li);
+    const caps = $$(".keycap", li);
     if (!caps.length) continue;
-    gsap.set(caps, { scale: 0.55, y: -10 });
+    gsap.set(caps, { scale: 0.8, y: -6 });
     ScrollTrigger.create({
       trigger: li,
       start: "top 90%", // same as the tile reveal
       once: true,
       onEnter: () => {
         li.dataset.keysDone = "1";
-        gsap.to(caps, { scale: 1, y: 0, duration: 0.65, ease: "back.out(3)", stagger: 0.08, delay: 0.15, clearProps: "transform" });
+        gsap.to(caps, { scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)", stagger: 0.06, delay: 0.1, clearProps: "transform" });
       },
     });
   }
@@ -258,39 +256,6 @@ function cardsParallax() {
 }
 
 /* ---------- Details ---------- */
-
-/** Scroll progress bar at the top (scaleX, scrub). */
-function progressBar() {
-  const bar = $(".scroll-progress");
-  if (!bar) return;
-  gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: 0.3 } });
-}
-
-/** The navigation hides when scrolling down and shows when scrolling up or on keyboard focus inside. */
-function hideOnScroll(signal: AbortSignal) {
-  const nav = $(".nav-wrap");
-  if (!nav) return;
-  let hidden = false;
-  const reveal = () => {
-    if (!hidden) return;
-    hidden = false;
-    gsap.to(nav, { yPercent: 0, duration: 0.4, ease: "power2.out", overwrite: true });
-  };
-  const hide = () => {
-    if (hidden || nav.contains(document.activeElement) || performance.now() < navHoldUntil) return;
-    hidden = true;
-    gsap.to(nav, { yPercent: -140, duration: 0.4, ease: "power2.out", overwrite: true });
-  };
-  ScrollTrigger.create({
-    start: 0,
-    end: "max",
-    onUpdate: (self) => {
-      if (self.scroll() < 120 || self.direction !== 1) reveal();
-      else hide();
-    },
-  });
-  nav.addEventListener("focusin", reveal, { signal });
-}
 
 /** The page height can change without a resize (images, fonts) – refresh ScrollTriggers. */
 let refreshTimer = 0;

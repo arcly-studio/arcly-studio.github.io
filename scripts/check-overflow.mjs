@@ -1,4 +1,4 @@
-// No horizontal scrolling on phones: every page of the simulation (.sim/site) is opened at 390 px in mobile
+// No horizontal scrolling on phones: every page of the simulation (.sim/site) is opened at 320 and 390 px in mobile
 // emulation and the document must not be wider than the window (a wider element – e.g. a decorative glow –
 // makes the mobile layout viewport widen and the page zoom out). Uses the installed Chrome (Playwright).
 // Default: the studio pages only (project sites in a plain simulation come from their main branches).
@@ -12,7 +12,7 @@ import { createPagesServer } from "./serve-pages.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const dir = path.join(root, ".sim", "site");
-const WIDTH = 390;
+const WIDTHS = [320, 390];
 const args = process.argv.slice(2);
 const projects = args.includes("--projects") ? args[args.indexOf("--projects") + 1].split(",").filter(Boolean) : [];
 if (!fs.existsSync(path.join(dir, "index.html"))) {
@@ -40,7 +40,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ channel: "chrome" });
 let errors = 0;
 try {
-  for (const url of urls.sort()) {
+  for (const url of urls.sort()) for (const WIDTH of WIDTHS) {
     const ctx = await browser.newContext({ viewport: { width: WIDTH, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     const page = await ctx.newPage();
     await page.goto(base + url, { waitUntil: "load" });
@@ -63,4 +63,4 @@ try {
   server.close();
 }
 if (errors) process.exit(1);
-console.log(`check-overflow: ${urls.length} pages at ${WIDTH} px without horizontal scrolling${projects.length ? ` (with /${projects.join("/, /")}/)` : " (studio)"}`);
+console.log(`check-overflow: ${urls.length} pages at ${WIDTHS.join(" and ")} px without horizontal scrolling${projects.length ? ` (with /${projects.join("/, /")}/)` : " (studio)"}`);

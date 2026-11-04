@@ -18,12 +18,12 @@ const mainLabel = `${app.name} – ${toSite ? t.openSite : t.openRepo}`;
 const secondary = [
   ...(app.storeId ? [{ href: storeUrl(app.storeId, lang), label: t.store, svg: icon("ShoppingBag", 16) }] : []),
   ...(toSite ? [{ href: app.githubUrl, label: t.github, svg: githubIcon(16) }] : []),
-  ...app.socials.map((s) => ({ href: s.url, label: brandName(s.network), svg: brandIcon(s.network, 16) })),
+  ...app.socials.map((s) => ({ href: s.url, label: `${brandName(s.network)} ${s.handle}`, svg: brandIcon(s.network, 16) })),
 ];
 ---
 <article class:list={["card", "app-card", app.look && `look-${app.look}`]} data-app={app.slug} data-reveal aria-labelledby={`app-${app.slug}`}>
   <div class="app-shot">
-    <Picture src={app.image.src} widths={[400, 640, 960]} sizes="(min-width: 1020px) 360px, (min-width: 720px) 50vw, 100vw"
+    <Picture src={app.image.src} widths={[400, 640, 960, 1280]} sizes="(min-width: 1020px) min(692px, 45vw), (min-width: 720px) 50vw, 100vw"
       formats={["avif", "webp"]} fallbackFormat="jpg" quality={76} alt={app.image.alt[lang]} loading="lazy" decoding="async" />
   </div>
   <div class="app-body">
@@ -32,13 +32,13 @@ const secondary = [
       <h3 id={`app-${app.slug}`}>
         <a class="app-link" href={href} aria-label={mainLabel}>{app.name}</a>
       </h3>
-      <span class:list={["app-status", `is-${app.status}`]}>{t.status[app.status]}</span>
+      {app.status === "live" && <span class="app-status is-live">{t.status.live}</span>}
     </div>
     <p class="app-tagline">{app.tagline[lang]}</p>
     {app.status === "coming-soon" && <p class="app-note">{t.storeSoon}</p>}
     <ul class="app-links" aria-label={`${app.name} – ${t.links}`}>
       {secondary.map((s) => (
-        <li><a href={s.href} aria-label={`${s.label} – ${app.name}`} set:html={s.svg} /></li>
+        <li><a href={s.href} rel="noopener" aria-label={`${s.label} – ${app.name}`} title={s.label} set:html={s.svg} /></li>
       ))}
     </ul>
   </div>

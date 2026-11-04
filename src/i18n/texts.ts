@@ -14,7 +14,7 @@ export const texts = {
     ogAlt: "Arcly Studio – Small. Fast. Open source. Free apps for Windows.",
     skip: "Skip to content",
     langSwitch: "Language",
-    nav: { apps: "Apps", about: "About", principles: "Principles", contact: "Contact" },
+    nav: { apps: "Apps", about: "About", principles: "Principles", contact: "Contact", menu: "Menu" },
     // [before, accent, after] per line – the accent word gets the logo gradient.
     heroLines: [["SMALL. FAST.", "", ""], ["", "OPEN SOURCE", "."]] as [string, string, string][],
     heroSub:
@@ -26,8 +26,8 @@ export const texts = {
       // Valid for any number of apps (alternative: "Apps that do one thing well").
       title: "Small apps, each with one job",
       lead: "Free and open source, for Windows 10 and 11.",
-      status: { live: "Available", "coming-soon": "Coming soon" },
-      storeSoon: "Coming soon to Microsoft Store",
+      status: { live: "Available" },
+      storeSoon: "Planned for Microsoft Store",
       openSite: "website",
       openRepo: "on GitHub",
       store: "Microsoft Store",
@@ -67,6 +67,7 @@ export const texts = {
       githubText: "Source code and issues of all apps",
     },
     footerNav: "Links",
+    footerSocials: "The apps on social networks",
   },
   cs: {
     htmlLang: "cs",
@@ -77,7 +78,7 @@ export const texts = {
     ogAlt: "Arcly Studio – Malé. Rychlé. Open source. Aplikace pro Windows zdarma.",
     skip: "Přeskočit na obsah",
     langSwitch: "Jazyk",
-    nav: { apps: "Aplikace", about: "O studiu", principles: "Principy", contact: "Kontakt" },
+    nav: { apps: "Aplikace", about: "O studiu", principles: "Principy", contact: "Kontakt", menu: "Nabídka" },
     heroLines: [["MALÉ. RYCHLÉ.", "", ""], ["", "OPEN SOURCE", "."]] as [string, string, string][],
     heroSub:
       "Arcly Studio je nezávislé studio jednoho vývojáře. Aplikace pro Windows zdarma – bez účtu, bez telemetrie, nic navíc.",
@@ -88,8 +89,8 @@ export const texts = {
       // Platí pro libovolný počet aplikací (varianta: „Aplikace, které dělají jednu věc dobře“).
       title: "Malé aplikace, každá na jednu věc",
       lead: "Zdarma a s otevřeným kódem, pro Windows 10 a 11.",
-      status: { live: "Dostupné", "coming-soon": "Brzy" },
-      storeSoon: "Brzy v Microsoft Store",
+      status: { live: "Dostupné" },
+      storeSoon: "Připravujeme pro Microsoft Store",
       openSite: "web",
       openRepo: "na GitHubu",
       store: "Microsoft Store",
@@ -129,6 +130,7 @@ export const texts = {
       githubText: "Zdrojový kód a hlášení chyb všech aplikací",
     },
     footerNav: "Odkazy",
+    footerSocials: "Aplikace na sociálních sítích",
   },
 } as const;
 

@@ -146,17 +146,23 @@ for (const sm of locs(index)) {
 ok(sitemapUrls.length === pages.size && sitemapUrls.every((u) => pages.has(u)), "sitemap", `URLs ${sitemapUrls.join(", ")} ≠ indexable pages ${[...pages.keys()].join(", ")}`);
 ok(!sitemapUrls.some((u) => /404/.test(u)), "sitemap", "contains the 404 page");
 
-// robots.txt – exactly the agreed content: allow everything, own + project sitemaps
+// robots.txt – exactly the agreed content: allow everything, own + project sitemaps of the live sites.
+// Live = "live" in project-sites.json, plus the sites a simulation build marked live (dist/.sim-live.json,
+// written by scripts/sim.mjs – see src/data/live.ts).
+const simLive = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(dist, ".sim-live.json"), "utf8")); } catch { return []; }
+})();
+const isLive = (x) => x.live === true || simLive.includes(x.name);
 const robots = xml("robots.txt");
 const expected = ["User-agent: *", "Allow: /", "", `Sitemap: ${SITE}/sitemap-index.xml`,
-  ...sites.filter((x) => x.sitemap && x.live === true).map((x) => `Sitemap: ${SITE}/${x.name}/${x.sitemap}`), ""].join("\n");
+  ...sites.filter((x) => x.sitemap && isLive(x)).map((x) => `Sitemap: ${SITE}/${x.name}/${x.sitemap}`), ""].join("\n");
 ok(robots === expected, "robots.txt", `content differs from the agreed one:\n${robots}`);
 ok(/^User-agent: \*$/m.test(robots), "robots.txt", "missing User-agent: *");
 ok(!/^Disallow:\s*\S/m.test(robots), "robots.txt", "must not disallow anything");
 const robotSitemaps = [...robots.matchAll(/^Sitemap: (\S+)$/gm)].map((m) => m[1]);
 ok(robotSitemaps.includes(`${SITE}/sitemap-index.xml`), "robots.txt", "own sitemap missing");
 const sim = path.join(root, ".sim", "site");
-for (const s of sites.filter((x) => x.sitemap && x.live === true)) {
+for (const s of sites.filter((x) => x.sitemap && isLive(x))) {
   const u = `${SITE}/${s.name}/${s.sitemap}`;
   ok(robotSitemaps.includes(u), "robots.txt", `missing ${u}`);
   if (fs.existsSync(sim)) ok(fs.existsSync(path.join(sim, s.name, s.sitemap)), "robots.txt", `${u} does not exist in the simulation`);
@@ -169,7 +175,7 @@ for (const name of PROJECT_SEO) {
   const pdir = path.join(sim, name);
   if (!fs.existsSync(path.join(pdir, "index.html"))) {
     // A live project site must be in the simulation (robots.txt and the app card point to it).
-    if (sites.find((x) => x.name === name)?.live === true && fs.existsSync(path.join(sim, "index.html"))) fail(name, "is live but missing in the simulation");
+    if (isLive(sites.find((x) => x.name === name) ?? {}) && fs.existsSync(path.join(sim, "index.html"))) fail(name, "is live but missing in the simulation");
     else console.log(`check-seo: skipping /${name}/ (not in this simulation)`);
     continue;
   }

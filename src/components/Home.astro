@@ -97,12 +97,14 @@ const facts = [
         <p class="eyebrow">{t.about.eyebrow}</p>
         <h2 id="about-title">{t.about.title}</h2>
       </header>
-      <div class="about-body" data-reveal>
-        {t.about.body.map((p) => <p>{p}</p>)}
+      <div class="about-grid">
+        <div class="about-body" data-reveal>
+          {t.about.body.map((p) => <p>{p}</p>)}
+        </div>
+        <ul class="facts">
+          {facts.map((f) => <li data-reveal><strong>{f.value}</strong><span>{f.label}</span></li>)}
+        </ul>
       </div>
-      <ul class="facts">
-        {facts.map((f) => <li data-reveal><strong>{f.value}</strong><span>{f.label}</span></li>)}
-      </ul>
     </section>
 
     <section class="block" id="principles" aria-labelledby="principles-title">
@@ -113,7 +115,7 @@ const facts = [
       <ul class="keys">
         {t.principles.items.map((p) => (
           <li data-reveal>
-            <span class="keycaps"><kbd set:html={icon(p.icon, 20)} /></span>
+            <span class="keycaps" aria-hidden="true"><span class="keycap" set:html={icon(p.icon, 20)} /></span>
             <h3>{p.title}</h3>
             <p>{p.body}</p>
           </li>

@@ -67,8 +67,14 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 
 const sha = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 
-// 1) Studio site (build includes guard + check-words)
-run("npm", ["run", "build"], root);
+// 1) Studio site (build includes guard + check-words). With a local NoirPad build the studio is built as if
+//    NoirPad were deployed (ARCLY_SIM_LIVE, src/data/live.ts): its card leads to /noirpad/ and robots.txt lists
+//    its sitemap – only in the simulation; project-sites.json ("live") stays the switch for production.
+//    The marker dist/.sim-live.json tells check-seo which sites this build treats as live (a normal build
+//    empties dist/, so the marker never outlives the simulation build).
+const simLive = flag("--local-noirpad") ? ["noirpad"] : [];
+run("npm", ["run", "build"], root, cleanEnv(simLive.length ? { ARCLY_SIM_LIVE: simLive.join(",") } : {}));
+if (simLive.length) fs.writeFileSync(path.join(root, "dist", ".sim-live.json"), JSON.stringify(simLive));
 
 /** npm ci only when the lock file changed (stamp per source), then the site build with CI-like settings. */
 const buildSite = (site, stampName, basePath) => {

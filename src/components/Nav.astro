@@ -1,6 +1,7 @@
 ---
 // Announcement bar and floating navigation pill (as on the Dirwise site). Anchors are plain on the home
 // page, home URL + anchor elsewhere; the language switch keeps the current page.
+// Below 760 px the section links move into the mobile menu (src/scripts/menu.ts – family pattern, D1).
 import { announcement } from "../data/announcement";
 import { texts, links, home, type Lang } from "../i18n/texts";
 import { icon, githubIcon } from "../lib/icons";
@@ -10,6 +11,12 @@ interface Props { lang: Lang; path: string }
 const { lang, path } = Astro.props;
 const t = texts[lang];
 const anchor = (id: string) => (path === "" ? `#${id}` : `${home(lang)}#${id}`);
+const sections = [
+  { id: "apps", label: t.nav.apps },
+  { id: "about", label: t.nav.about },
+  { id: "principles", label: t.nav.principles },
+  { id: "contact", label: t.nav.contact },
+];
 ---
 {announcement.enabled && (
   <a class="announce" href={announcement.href[lang]}>
@@ -26,17 +33,30 @@ const anchor = (id: string) => (path === "" ? `#${id}` : `${home(lang)}#${id}`);
       <span>Arcly Studio</span>
     </a>
     <div class="nav-links">
-      <a href={anchor("apps")}>{t.nav.apps}</a>
-      <a href={anchor("about")}>{t.nav.about}</a>
-      <a href={anchor("principles")}>{t.nav.principles}</a>
-      <a href={anchor("contact")}>{t.nav.contact}</a>
+      {sections.map((s) => <a href={anchor(s.id)}>{s.label}</a>)}
     </div>
     <div class="nav-end">
-      <a href={links.org} class="nav-icon" aria-label="GitHub" set:html={githubIcon(18)} />
+      <a href={links.org} class="nav-icon" aria-label="GitHub" title="GitHub" set:html={githubIcon(18)} />
       <div class="lang" role="group" aria-label={t.langSwitch}>
         <a href={`${home("en")}${path}`} hreflang="en" lang="en" aria-current={lang === "en" ? "page" : undefined}>EN</a>
         <a href={`${home("cs")}${path}`} hreflang="cs" lang="cs" aria-current={lang === "cs" ? "page" : undefined}>CS</a>
       </div>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label={t.nav.menu} title={t.nav.menu} hidden>
+        <Fragment set:html={icon("Menu", 20, 'class="i-open"')} />
+        <Fragment set:html={icon("X", 20, 'class="i-close"')} />
+      </button>
+    </div>
+    {/* Inside <nav> so the menu links belong to the same navigation landmark; positioned under the pill. */}
+    <div class="nav-menu" id="nav-menu" hidden>
+      <ul>
+        {sections.map((s) => <li><a href={anchor(s.id)}>{s.label}</a></li>)}
+        <li><a href={links.org}><Fragment set:html={githubIcon(18)} />GitHub</a></li>
+      </ul>
     </div>
   </nav>
 </header>
+
+<script>
+  import { setupMenu } from "../scripts/menu";
+  setupMenu();
+</script>
