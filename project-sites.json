@@ -1,7 +1,7 @@
 {
-  "$comment": "GitHub Pages project sites served under this host (/<name>/). The studio site must never contain these paths (scripts/guard.mjs). \"live\" = the project site is deployed: only then robots.txt lists its sitemap and the app card links to it (src/data/apps.ts). NoirPad: switch to true in phase 6, together with deploying /noirpad/.",
+  "$comment": "GitHub Pages project sites served under this host (/<name>/). The studio site must never contain these paths (scripts/guard.mjs). \"live\" = the project site is deployed: only then robots.txt lists its sitemap and the app card links to it (src/data/apps.ts). NoirPad: true since 2026-11-27 – push this only after https://arcly-studio.github.io/noirpad/ answers 200.",
   "sites": [
     { "name": "dirwise", "repo": "arcly-studio/dirwise", "sitemap": "sitemap-index.xml", "live": true },
-    { "name": "noirpad", "repo": "arcly-studio/noirpad", "sitemap": "sitemap-index.xml", "live": false }
+    { "name": "noirpad", "repo": "arcly-studio/noirpad", "sitemap": "sitemap-index.xml", "live": true }
   ]
 }
